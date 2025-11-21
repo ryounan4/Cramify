@@ -3,7 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "./auth/AuthContext";
 
 export const metadata: Metadata = {
-  title: "Cramify - AI Cheat Sheet Generator",
+  title: "Cramify",
   description: "Generate dense 2-page cheat sheets from lecture PDFs using AI",
 };
 

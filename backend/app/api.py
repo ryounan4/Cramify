@@ -7,7 +7,7 @@ import io
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from cheatsheet_pipeline import generate_cheatsheet
+from .cheatsheet_pipeline import generate_cheatsheet
 
 app = Flask(__name__)
 

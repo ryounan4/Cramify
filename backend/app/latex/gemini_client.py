@@ -79,7 +79,7 @@ def gemini_generate_latex(
         response = requests.post(
             f"{API_URL}?key={api_key}",
             json=payload,
-            timeout=120  # 2 minute timeout for large batches
+            timeout=240  # 2 minute timeout for large batches
         )
         response.raise_for_status()
 
@@ -110,6 +110,96 @@ def gemini_generate_latex(
         latex_source = validate_latex_completeness(latex_source)
 
         return latex_source
+
+
+def fix_latex_errors(
+    latex_source: str,
+    errors: List[str],
+    compilation_log: str,
+    api_key: str = API_KEY
+) -> str:
+    """
+    Ask Gemini to fix LaTeX compilation errors.
+
+    Args:
+        latex_source: Current LaTeX source that failed to compile
+        errors: List of error messages from LaTeX compiler
+        compilation_log: Full compilation log
+        api_key: Gemini API key
+
+    Returns:
+        Fixed LaTeX source
+
+    Raises:
+        requests.HTTPError: If API call fails
+        ValueError: If API key is missing
+    """
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY not set.")
+
+    # Extract the most relevant part of the log (last 1000 chars)
+    log_excerpt = compilation_log[-1000:] if len(compilation_log) > 1000 else compilation_log
+
+    error_summary = "\n".join(errors[:5])  # First 5 errors
+
+    instruction = f"""The LaTeX code you generated has compilation errors. Please fix them and return the corrected complete LaTeX document.
+
+COMPILATION ERRORS:
+{error_summary}
+
+RELEVANT LOG EXCERPT:
+{log_excerpt}
+
+Please:
+1. Identify and fix all syntax errors
+2. Ensure all math expressions are properly wrapped in $ or $$ delimiters
+3. Escape special characters correctly (%, &, _, etc.)
+4. Make sure all environments are properly closed
+5. Return the COMPLETE corrected LaTeX document (not just the fixes)
+
+CURRENT LATEX SOURCE:
+"""
+
+    payload = {
+        "contents": [{
+            "role": "user",
+            "parts": [
+                {"text": instruction},
+                {"text": latex_source}
+            ]
+        }],
+        "generation_config": {
+            "temperature": 0.2,
+            "max_output_tokens": 8192,
+        }
+    }
+
+    print(f"Asking Gemini to fix {len(errors)} LaTeX errors...")
+
+    response = requests.post(
+        f"{API_URL}?key={api_key}",
+        json=payload,
+        timeout=240
+    )
+    response.raise_for_status()
+
+    data = response.json()
+
+    # Check for blocked responses
+    if "candidates" not in data or len(data["candidates"]) == 0:
+        raise ValueError("Gemini API error: No candidates in response")
+
+    candidate = data["candidates"][0]
+    if "content" not in candidate:
+        raise ValueError(f"Gemini blocked response. Reason: {candidate.get('finishReason', 'UNKNOWN')}")
+
+    fixed_latex = candidate["content"]["parts"][0]["text"]
+
+    # Clean up and validate
+    fixed_latex = clean_gemini_response(fixed_latex)
+    fixed_latex = validate_latex_completeness(fixed_latex)
+
+    return fixed_latex
 
 
 def condense_to_two_pages(
@@ -158,7 +248,7 @@ def condense_to_two_pages(
     response = requests.post(
         f"{API_URL}?key={api_key}",
         json=payload,
-        timeout=120
+        timeout=240
     )
     response.raise_for_status()
 

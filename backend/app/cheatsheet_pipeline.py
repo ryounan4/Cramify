@@ -20,6 +20,7 @@ from .latex import (
     gemini_generate_latex,
     condense_to_two_pages,
     compile_latex,
+    fix_latex_errors,
 )
 
 logger = logging.getLogger(__name__)
@@ -98,27 +99,59 @@ def generate_cheatsheet(
             }
         }
 
-    # Stage 3: Compile initial version
+    # Stage 3: Compile initial version with retry logic
     logger.info(f"STAGE 3 START: Compiling initial LaTeX")
     result = compile_latex(latex_source, output_dir=output_dir)
 
-    if not result["success"]:
-        elapsed = time.time() - start_time
-        logger.error(f"STAGE 3 FAILED: Compilation failed after {elapsed:.1f}s")
+    # Retry up to 3 times if compilation fails
+    max_retries = 3
+    retry_count = 0
+
+    while not result["success"] and retry_count < max_retries:
+        retry_count += 1
+        logger.warning(f"STAGE 3: Compilation failed (attempt {retry_count}/{max_retries})")
         if result["errors"]:
             logger.error(f"STAGE 3: First 3 errors: {result['errors'][:3]}")
+
+        try:
+            logger.info(f"STAGE 3: Asking Gemini to fix errors (retry {retry_count}/{max_retries})...")
+            latex_source = fix_latex_errors(
+                latex_source,
+                result["errors"],
+                result["log"],
+                api_key
+            )
+            logger.info(f"STAGE 3: Received fixed LaTeX, recompiling...")
+
+            # Try compiling the fixed version
+            result = compile_latex(latex_source, output_dir=output_dir)
+
+            if result["success"]:
+                logger.info(f"STAGE 3: Fixed LaTeX compiled successfully on retry {retry_count}")
+                break
+        except Exception as e:
+            logger.error(f"STAGE 3: Error fixing LaTeX on retry {retry_count}: {e}")
+            # Continue to next retry or fail
+
+    if not result["success"]:
+        elapsed = time.time() - start_time
+        logger.error(f"STAGE 3 FAILED: Compilation failed after {max_retries} retries and {elapsed:.1f}s")
+        if result["errors"]:
+            logger.error(f"STAGE 3: Final errors: {result['errors'][:3]}")
         return {
             "success": False,
             "pdf_bytes": None,
             "pdf_path": None,
             "latex_source": latex_source,
             "tex_path": result["tex_path"],
+            "error": f"LaTeX compilation failed after {max_retries} fix attempts",
             "metadata": {
                 "input_pdfs": len(pdf_files),
                 "total_pages": page_count,
                 "output_pages": 0,
                 "processing_time_sec": time.time() - start_time,
-                "compilation_log": result["log"]
+                "compilation_log": result["log"],
+                "retry_attempts": retry_count
             }
         }
 

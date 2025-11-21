@@ -4,10 +4,15 @@ Flash API that Receives PDFs → Generates cheat sheet → Returns PDF
 
 import os
 import io
+import logging
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from .cheatsheet_pipeline import generate_cheatsheet
+
+# Configure logging for gunicorn
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -50,10 +55,15 @@ def generate():
 
     #Receive PDFs, return cheat sheet
 
+    logger.info(f"REQUEST: Method={request.method}, Content-Type={request.content_type}")
+    logger.info(f"REQUEST: Files keys={list(request.files.keys())}")
+
     files = request.files.getlist('files')
+    logger.info(f"REQUEST: Got {len(files)} files from getlist('files')")
 
     # Validate: Check if any files uploaded
     if not files or len(files) == 0:
+        logger.error("VALIDATION FAILED: No files in request")
         return jsonify({'error': 'No files uploaded'}), 400
 
     # Validate: Check file count limit

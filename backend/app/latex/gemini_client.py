@@ -73,21 +73,43 @@ def gemini_generate_latex(
 
     print(f"Sending {len(images)} images to Gemini Flash...")
 
-    response = requests.post(
-        f"{API_URL}?key={api_key}",
-        json=payload,
-        timeout=120  # 2 minute timeout for large batches
-    )
-    response.raise_for_status()
+    # Retry logic for blocked responses
+    max_retries = 3
+    for attempt in range(max_retries):
+        response = requests.post(
+            f"{API_URL}?key={api_key}",
+            json=payload,
+            timeout=120  # 2 minute timeout for large batches
+        )
+        response.raise_for_status()
 
-    data = response.json()
-    latex_source = data["candidates"][0]["content"]["parts"][0]["text"]
+        data = response.json()
 
-    # Clean up markdown code fences and validate completeness
-    latex_source = clean_gemini_response(latex_source)
-    latex_source = validate_latex_completeness(latex_source)
+        # Check if response was blocked or has unexpected structure
+        if "candidates" not in data or len(data["candidates"]) == 0:
+            if attempt < max_retries - 1:
+                print(f"Attempt {attempt + 1}: No candidates, retrying...")
+                continue
+            raise ValueError(f"Gemini API error: No candidates after {max_retries} attempts")
 
-    return latex_source
+        candidate = data["candidates"][0]
+
+        # Check if content was blocked by safety filters
+        if "content" not in candidate:
+            finish_reason = candidate.get("finishReason", "UNKNOWN")
+            if attempt < max_retries - 1:
+                print(f"Attempt {attempt + 1}: Response blocked ({finish_reason}), retrying...")
+                continue
+            raise ValueError(f"Gemini blocked response after {max_retries} attempts. Reason: {finish_reason}")
+
+        # Success. Extract the LaTeX
+        latex_source = candidate["content"]["parts"][0]["text"]
+
+        # Clean up markdown code fences and validate completeness
+        latex_source = clean_gemini_response(latex_source)
+        latex_source = validate_latex_completeness(latex_source)
+
+        return latex_source
 
 
 def condense_to_two_pages(

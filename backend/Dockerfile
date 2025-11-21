@@ -1,11 +1,20 @@
 # Use official Python 3.11 slim image (secure base from Docker Hub)
 FROM python:3.11-slim
 
-# Install minimal LaTeX
+# Install LaTeX - all packages needed for template in prompts.py:
+# - texlive-latex-base: article class, inputenc, fontenc, amsmath, amssymb
+# - texlive-latex-extra: geometry, multicol, enumitem, titlesec, mathtools
+# - texlive-fonts-recommended: standard fonts for better compatibility
+# - texlive-science: siunitx package
+# - lmodern: Latin Modern fonts
+# - latexmk: LaTeX compilation tool
+# - ghostscript: PDF processing
 RUN apt-get update && apt-get install -y --no-install-recommends \
     texlive-latex-base \
     texlive-latex-extra \
+    texlive-fonts-recommended \
     texlive-science \
+    lmodern \
     latexmk \
     ghostscript \
     && apt-get clean \

@@ -2,12 +2,14 @@
 FROM python:3.11-slim
 
 # Install LaTeX and system dependencies
-# Using specific versions for security
 RUN apt-get update && apt-get install -y \
     texlive-latex-base \
     texlive-latex-extra \
     texlive-fonts-recommended \
     texlive-fonts-extra \
+    texlive-science \
+    texlive-pictures \
+    texlive-pstricks \
     latexmk \
     ghostscript \
     && rm -rf /var/lib/apt/lists/*

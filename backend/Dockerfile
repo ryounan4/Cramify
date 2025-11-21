@@ -1,18 +1,14 @@
 # Use official Python 3.11 slim image (secure base from Docker Hub)
 FROM python:3.11-slim
 
-# Install LaTeX and system dependencies
-RUN apt-get update && apt-get install -y \
+# Install minimal LaTeX
+RUN apt-get update && apt-get install -y --no-install-recommends \
     texlive-latex-base \
     texlive-latex-extra \
-    texlive-fonts-recommended \
-    texlive-fonts-extra \
     texlive-science \
-    texlive-pictures \
-    texlive-pstricks \
-    latexmk \
     ghostscript \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Create non-root user for security (don't run as root)
 RUN useradd -m -u 1000 appuser

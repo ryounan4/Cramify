@@ -30,7 +30,8 @@ export default function Home() {
     });
 
     try {
-        const response = await fetch('http://localhost:5001/api/generate', {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+        const response = await fetch(`${API_URL}/api/generate`, {
             method: 'POST',
             body: formData
         });

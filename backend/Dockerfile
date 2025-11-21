@@ -34,5 +34,5 @@ USER appuser
 # Expose port (Railway uses PORT env variable)
 EXPOSE 8080
 
-# Start gunicorn with Railway's PORT
-CMD gunicorn -w 4 -b 0.0.0.0:$PORT app.api:app
+# Start gunicorn with Railway's PORT and increased timeout for AI processing
+CMD gunicorn -w 4 -b 0.0.0.0:$PORT --timeout 300 app.api:app

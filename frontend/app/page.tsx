@@ -6,21 +6,27 @@
 
 import { useState } from 'react';
 import { Upload, File, FileText, Zap, Loader2 } from 'lucide-react';
+import { useAuth } from './auth/AuthContext';
+import LoginModal from './components/LoginModal';
+import UserMenu from './components/UserMenu';
 
 export default function Home() {
+  // Get user state from auth context
+  const { user, getAuthToken } = useAuth();
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);  // Controls login modal visibility
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     setSelectedFiles(files);
   };
 
-  const handleGenerate = async () => {
-
+  // Actual API call logic (assumes user is already logged in)
+  const performGeneration = async () => {
     setIsGenerating(true);
     setError(null);
     setGeneratedPdfUrl(null);
@@ -50,13 +56,38 @@ export default function Home() {
     } finally {
         setIsGenerating(false);
     }
-  
-};
+  };
+
+  // Called when user clicks "Generate" button
+  const handleGenerate = async () => {
+    // Route 1: User NOT logged in → show login modal
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    // Route 2: User IS logged in → make API call
+    await performGeneration();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Login Modal - appears when showLoginModal is true */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={() => {
+          setShowLoginModal(false);   // Close modal - user can now click Generate again
+        }}
+      />
+
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20 px-4">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20 px-4 relative">
+        {/* User Menu in top-right corner */}
+        <div className="absolute top-6 right-6">
+          <UserMenu onSignInClick={() => setShowLoginModal(true)} />
+        </div>
+
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-block bg-white/20 backdrop-blur-sm rounded-full px-4 py-1 text-sm font-medium mb-6">
             AI-Powered Study Tool
@@ -67,7 +98,7 @@ export default function Home() {
           <p className="text-xl md:text-2xl text-blue-100 mb-8">
            <b>Save time. Study smarter. Ace more exams.</b>
            <br></br><br></br>
-           Transfrom all your lectures and notes into a cheat sheet within minutes 
+           Transfrom all your lectures and notes into a cheat sheet within minutes
           </p>
         </div>
       </div>

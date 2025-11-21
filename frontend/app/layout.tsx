@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "./auth/AuthContext";
 
 export const metadata: Metadata = {
   title: "Cramify - AI Cheat Sheet Generator",
@@ -14,9 +15,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50 min-h-screen">
-        {/* You could add a navbar here that appears on all pages */}
-        <main>{children}</main>
-        {/* You could add a footer here that appears on all pages */}
+        {/* AuthProvider wraps entire app so any component can access user state */}
+        <AuthProvider>
+          <main>{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

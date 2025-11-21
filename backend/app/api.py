@@ -76,23 +76,38 @@ def generate():
     for file in files:
         # Validate: Check if filename exists
         if not file.filename:
+            logger.error("VALIDATION FAILED: File has no filename")
             return jsonify({'error': 'File has no name'}), 400
+
+        logger.info(f"VALIDATION PASSED: Filename = {file.filename}")
 
         # Validate: Check file extension
         if not allowed_file(file.filename):
+            logger.error(f"VALIDATION FAILED: Invalid extension for {file.filename}")
             return jsonify({'error': f'Invalid file type: {file.filename}. Only PDF files allowed.'}), 400
+
+        logger.info(f"VALIDATION PASSED: File extension OK for {file.filename}")
 
         # Sanitize filename (removes dangerous characters like ../)
         safe_filename = secure_filename(file.filename)
+        logger.info(f"VALIDATION: Sanitized filename = {safe_filename}")
 
         # Validate: Check file size and read content
         pdf_bytes = file.read(MAX_FILE_SIZE + 1)
+        logger.info(f"VALIDATION: Read {len(pdf_bytes)} bytes from {safe_filename}")
+
         if len(pdf_bytes) > MAX_FILE_SIZE:
+            logger.error(f"VALIDATION FAILED: File too large: {safe_filename} ({len(pdf_bytes)} bytes)")
             return jsonify({'error': f'File too large: {safe_filename}. Maximum size is 50MB.'}), 400
+
+        logger.info(f"VALIDATION PASSED: File size OK for {safe_filename}")
 
         # Validate: Verify it's actually a PDF (not renamed .exe, etc.)
         if not validate_pdf_content(pdf_bytes):
+            logger.error(f"VALIDATION FAILED: Invalid PDF magic bytes for {safe_filename}")
             return jsonify({'error': f'Invalid PDF file: {safe_filename}'}), 400
+
+        logger.info(f"VALIDATION PASSED: PDF magic bytes OK for {safe_filename}")
 
         pdf_files.append(pdf_bytes)
         filenames.append(safe_filename)

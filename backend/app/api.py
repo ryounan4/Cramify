@@ -10,7 +10,11 @@ from werkzeug.utils import secure_filename
 from cheatsheet_pipeline import generate_cheatsheet
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS to only allow requests from your frontend
+# Add your Vercel URL to ALLOWED_ORIGINS environment variable in Railway
+ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:3000,https://cramify-six.vercel.app').split(',')
+CORS(app, origins=ALLOWED_ORIGINS)
 
 # Security Configuration
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB per file

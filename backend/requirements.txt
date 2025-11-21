@@ -1,0 +1,8 @@
+pymupdf
+requests
+python-dotenv
+jinja2
+playwright
+flask
+flask-cors
+gunicorn

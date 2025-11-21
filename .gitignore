@@ -36,3 +36,11 @@ next-env.d.ts
 
 node_modules/
 backend/.venv*
+backend/designs/*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python

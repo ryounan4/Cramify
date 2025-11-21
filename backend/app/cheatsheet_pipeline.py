@@ -11,6 +11,7 @@ This module orchestrates the complete pipeline:
 import os
 import sys
 import time
+import logging
 from pathlib import Path
 from typing import List, Dict
 
@@ -20,6 +21,8 @@ from .latex import (
     condense_to_two_pages,
     compile_latex,
 )
+
+logger = logging.getLogger(__name__)
 
 # Configuration
 API_KEY = os.getenv('GEMINI_API_KEY', '')
@@ -57,24 +60,28 @@ def generate_cheatsheet(
         }
     """
     start_time = time.time()
+    logger.info(f"STAGE 1 START: Converting {len(pdf_files)} PDFs to images...")
 
     # Stage 1: Convert all PDFs to images
-    print(f" Converting {len(pdf_files)} PDFs to images...")
     all_images = []
     page_count = 0
 
-    for pdf_bytes in pdf_files:
+    for i, pdf_bytes in enumerate(pdf_files):
+        logger.info(f"STAGE 1: Converting PDF {i+1}/{len(pdf_files)} ({len(pdf_bytes)} bytes)")
         images = pdf_to_images(pdf_bytes)
         all_images.extend(images)
         page_count += len(images)
+        logger.info(f"STAGE 1: PDF {i+1} converted to {len(images)} pages")
 
-    print(f" Converted {page_count} pages")
+    logger.info(f"STAGE 1 COMPLETE: Converted {page_count} total pages from {len(pdf_files)} PDFs")
 
     # Stage 2: Single Gemini call to generate comprehensive LaTeX
+    logger.info(f"STAGE 2 START: Calling Gemini API with {len(all_images)} images")
     try:
         latex_source = gemini_generate_latex(all_images, filenames, api_key)
-        print(f" Received {len(latex_source)} characters of LaTeX")
+        logger.info(f"STAGE 2 COMPLETE: Received {len(latex_source)} characters of LaTeX")
     except Exception as e:
+        logger.error(f"STAGE 2 FAILED: Gemini API error: {str(e)}")
         return {
             "success": False,
             "pdf_bytes": None,
@@ -92,13 +99,14 @@ def generate_cheatsheet(
         }
 
     # Stage 3: Compile initial version
+    logger.info(f"STAGE 3 START: Compiling initial LaTeX")
     result = compile_latex(latex_source, output_dir=output_dir)
 
     if not result["success"]:
         elapsed = time.time() - start_time
-        print(f" Compilation failed after {elapsed:.1f}s")
+        logger.error(f"STAGE 3 FAILED: Compilation failed after {elapsed:.1f}s")
         if result["errors"]:
-            print(f"   Errors: {result['errors'][:3]}")
+            logger.error(f"STAGE 3: First 3 errors: {result['errors'][:3]}")
         return {
             "success": False,
             "pdf_bytes": None,
@@ -116,37 +124,39 @@ def generate_cheatsheet(
 
     # Stage 4: Check page count and condense if needed
     actual_pages = result["page_count"]
-    print(f" Initial compilation: {actual_pages} page(s)")
+    logger.info(f"STAGE 3 COMPLETE: Initial compilation succeeded with {actual_pages} page(s)")
 
     if actual_pages > 2:
-        print(f" Condensing {actual_pages} pages down to 2 pages...")
+        logger.info(f"STAGE 4 START: Condensing {actual_pages} pages down to 2 pages...")
         try:
             latex_source = condense_to_two_pages(latex_source, actual_pages, api_key)
+            logger.info(f"STAGE 4: Received condensed LaTeX, recompiling...")
 
             # Recompile condensed version
             result = compile_latex(latex_source, output_dir=output_dir)
 
             if result["success"]:
                 final_pages = result["page_count"]
-                print(f" Condensed to {final_pages} page(s)")
+                logger.info(f"STAGE 4 COMPLETE: Condensed to {final_pages} page(s)")
             else:
-                print(f" Condensed version failed to compile, using original")
+                logger.warning(f"STAGE 4: Condensed version failed to compile, using original")
                 # Fall back to original if condensation fails
                 result = compile_latex(latex_source, output_dir=output_dir)
 
         except Exception as e:
-            print(f" Condensation failed: {e}")
-            print(f" Using original {actual_pages}-page version")
+            logger.error(f"STAGE 4 FAILED: Condensation error: {e}")
+            logger.info(f"STAGE 4: Using original {actual_pages}-page version")
 
     elapsed = time.time() - start_time
 
     if result["success"]:
         final_pages = result["page_count"]
-        print(f" Generated cheat sheet in {elapsed:.1f}s ({final_pages} page(s))")
+        pdf_size = len(result["pdf_bytes"]) if result["pdf_bytes"] else 0
+        logger.info(f"FINAL SUCCESS: Generated cheat sheet in {elapsed:.1f}s ({final_pages} pages, {pdf_size} bytes)")
         if final_pages != 2:
-            print(f"  Note: Output is {final_pages} pages")
+            logger.warning(f"FINAL: Output is {final_pages} pages (target was 2)")
     else:
-        print(f" Final compilation failed after {elapsed:.1f}s")
+        logger.error(f"FINAL FAILURE: Final compilation failed after {elapsed:.1f}s")
 
     return {
         "success": result["success"],

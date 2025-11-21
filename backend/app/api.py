@@ -110,12 +110,15 @@ def generate():
         pdf_files.append(pdf_bytes)
         filenames.append(safe_filename)
 
-    print(f" Received {len(pdf_files)} PDF file(s): {filenames}")
+    logger.info(f"VALIDATION COMPLETE: Received {len(pdf_files)} PDF file(s): {filenames}")
 
     api_key = os.getenv('GEMINI_API_KEY')
 
     if not api_key:
+        logger.error("PIPELINE ERROR: GEMINI_API_KEY not set on server")
         return jsonify({'error': 'GEMINI_API_KEY not set on server'}), 500
+
+    logger.info(f"PIPELINE START: Starting generation pipeline with {len(pdf_files)} files")
 
     # Run the generation pipeline
     try:
@@ -124,17 +127,23 @@ def generate():
             filenames=filenames,
             api_key=api_key
         )
+        logger.info("PIPELINE: generate_cheatsheet() completed")
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"PIPELINE ERROR: Exception in generate_cheatsheet(): {str(e)}")
         return jsonify({'error': f'Pipeline error: {str(e)}'}), 500
 
     # Check if generation succeeded
     if not result['success']:
         error_msg = result.get('error', 'Failed to generate cheat sheet')
+        logger.error(f"PIPELINE FAILED: {error_msg}")
         return jsonify({'error': error_msg}), 500
+
+    logger.info("PIPELINE SUCCESS: Cheat sheet generation succeeded")
 
     # Return the PDF file to frontend
     if result['pdf_bytes']:
+        pdf_size = len(result['pdf_bytes'])
+        logger.info(f"RESPONSE: Sending PDF to frontend ({pdf_size} bytes)")
         return send_file(
             io.BytesIO(result['pdf_bytes']),
             mimetype='application/pdf',
@@ -142,6 +151,7 @@ def generate():
             download_name='cramify-cheatsheet.pdf'
         )
     else:
+        logger.error("RESPONSE ERROR: No PDF bytes in result")
         return jsonify({'error': 'No PDF generated'}), 500
 
 

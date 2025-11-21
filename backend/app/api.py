@@ -44,10 +44,8 @@ def allowed_file(filename):
 
 def validate_pdf_content(pdf_bytes):
     """Verify file is actually a PDF by checking magic bytes"""
-    if len(pdf_bytes) < 4:
-        return False
-    # PDF files start with %PDF
-    return pdf_bytes[:4] == b'%PDF'
+    header = pdf_bytes[:1024]
+    return b'%PDF' in header
 
 
 @app.route('/api/generate', methods=['POST'])

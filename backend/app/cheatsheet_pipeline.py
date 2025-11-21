@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from typing import List, Dict
 
-from latex import (
+from .latex import (
     pdf_to_images,
     gemini_generate_latex,
     condense_to_two_pages,

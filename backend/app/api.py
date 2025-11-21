@@ -13,8 +13,14 @@ app = Flask(__name__)
 
 # Configure CORS to only allow requests from your frontend
 # Add your Vercel URL to ALLOWED_ORIGINS environment variable in Railway
-ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:3000,https://cramify-six.vercel.app').split(',')
-CORS(app, origins=ALLOWED_ORIGINS)
+ALLOWED_ORIGINS = os.getenv(
+    'ALLOWED_ORIGINS',
+    'http://localhost:3000,https://cramify-six.vercel.app'
+).split(',')
+
+CORS(app, resources={
+    r"/api/*": {"origins": ALLOWED_ORIGINS}
+})
 
 # Security Configuration
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB per file
@@ -116,8 +122,7 @@ def generate():
 def health():
     """Health check endpoint"""
     return jsonify({
-        'status': 'ok',
-        'gemini_api_key': '✓' if os.getenv('GEMINI_API_KEY') else '✗'
+        'status': 'ok'
     })
 
 

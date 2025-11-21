@@ -19,7 +19,11 @@ ALLOWED_ORIGINS = os.getenv(
 ).split(',')
 
 CORS(app, resources={
-    r"/api/*": {"origins": ALLOWED_ORIGINS}
+    r"/api/*": {
+        "origins": ALLOWED_ORIGINS,
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
 })
 
 # Security Configuration

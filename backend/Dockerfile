@@ -43,4 +43,4 @@ USER appuser
 EXPOSE 8080
 
 # Start gunicorn with Railway's PORT and increased timeout for AI processing
-CMD gunicorn -w 4 -b 0.0.0.0:$PORT --timeout 300 app.api:app
+CMD gunicorn -w 4 -b 0.0.0.0:$PORT --timeout 600 app.api:app

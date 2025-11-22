@@ -16,7 +16,7 @@ from .utils import clean_gemini_response, validate_latex_completeness
 load_dotenv()
 
 API_KEY = os.getenv('GEMINI_API_KEY', '')
-API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent"
+API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 
 def gemini_generate_latex(

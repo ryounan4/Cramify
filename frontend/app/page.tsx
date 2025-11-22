@@ -98,7 +98,7 @@ export default function Home() {
           <p className="text-xl md:text-2xl text-blue-100 mb-8">
            <b>Save time. Study smarter. Ace more exams.</b>
            <br></br><br></br>
-           Transfrom all your lectures and notes into a cheat sheet within minutes
+           Transform all your lectures and notes into a cheat sheet within minutes
           </p>
         </div>
       </div>

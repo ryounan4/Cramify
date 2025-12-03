@@ -179,6 +179,22 @@ export default function Home() {
         )}
       </div>
 
+
+      {/* Beta Notice */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6 mb-8 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 bg-blue-100 rounded-full p-2">
+            <Zap className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-1">We're in Beta!</h3>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              Cramify is still being perfected. If your cheat sheet fails to generate, just try again!
+              We're working hard to make the experience smoother 😄
+            </p>
+          </div>
+        </div>
+      </div>
       {/* Error Display */}
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-lg mb-8 shadow-md">

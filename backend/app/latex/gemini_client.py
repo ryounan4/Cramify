@@ -103,7 +103,22 @@ def gemini_generate_latex(
             raise ValueError(f"Gemini blocked response after {max_retries} attempts. Reason: {finish_reason}")
 
         # Success. Extract the LaTeX
-        latex_source = candidate["content"]["parts"][0]["text"]
+        content = candidate.get("content", {})
+        parts = content.get("parts", [])
+
+        if not parts or len(parts) == 0:
+            if attempt < max_retries - 1:
+                print(f"Attempt {attempt + 1}: Empty parts in response, retrying...")
+                continue
+            raise ValueError("Gemini API error: Response has no content parts")
+
+        latex_source = parts[0].get("text", "")
+
+        if not latex_source:
+            if attempt < max_retries - 1:
+                print(f"Attempt {attempt + 1}: Empty text in response, retrying...")
+                continue
+            raise ValueError("Gemini API error: Response text is empty")
 
         # Clean up markdown code fences and validate completeness
         latex_source = clean_gemini_response(latex_source)

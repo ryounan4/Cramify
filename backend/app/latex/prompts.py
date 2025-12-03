@@ -136,6 +136,12 @@ EXAMPLE OUTPUT STRUCTURE:
 \\end{document}
 ```
 
+MAKE SURE THE LATEX IS READY TO COMPILE:
+- It should have no errors like Missing \\begin{document} or Missing \\end{document}
+- It should have no Unmatched braces or similar issues
+- It should have no errors like Missing $ inserted.
+- It should compile cleanly in a standard LaTeX editor
+
 Remember: Quality > Quantity. Focus on the most important content that fits perfectly in 2 pages."""
 
 
@@ -166,7 +172,7 @@ CONDENSATION_PROMPT_TEMPLATE = """The current LaTeX cheat sheet is {current_page
 - **NO horizontal overflow:** All tables, equations, and text must fit within the column width
 - For wide tables: use \\tiny/\\scriptsize font or split into smaller tables
 - For long equations: use aligned environment to break across lines
-- This is a 2-column layout with 0.5in margins - everything must fit!
+- This is a 2-column layout with 0.2in margins - everything must fit!
 
 **CRITICAL:** Return the COMPLETE modified LaTeX document (starting with \\documentclass and ending with \\end{{document}}).
 

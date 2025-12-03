@@ -117,7 +117,7 @@ export default function Home() {
         <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-all">
           <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 mb-4 text-lg">
-            Click to select PDF files or drag and drop
+            Click to select up to 10 PDF files
           </p>
           <input
             type="file"

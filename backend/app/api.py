@@ -135,7 +135,7 @@ def generate():
     # Check if generation succeeded
     if not result['success']:
         error_msg = result.get('error', 'Failed to generate cheat sheet')
-        logger.error(f"PIPELINE FAILED: {error_msg}")
+        logger.error(f"PIPELINE FAILED")
         return jsonify({'error': error_msg}), 500
 
     logger.info("PIPELINE SUCCESS: Cheat sheet generation succeeded")

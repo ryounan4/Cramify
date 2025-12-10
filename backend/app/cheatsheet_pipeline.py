@@ -82,14 +82,14 @@ def generate_cheatsheet(
         latex_source = gemini_generate_latex(all_images, filenames, api_key)
         logger.info(f"STAGE 2 COMPLETE: Received {len(latex_source)} characters of LaTeX")
     except Exception as e:
-        logger.error(f"STAGE 2 FAILED: Gemini API error: {str(e)}")
+        logger.error(f"STAGE 2 FAILED")
         return {
             "success": False,
             "pdf_bytes": None,
             "pdf_path": None,
             "latex_source": "",
             "tex_path": None,
-            "error": f"Gemini API error: {str(e)}",
+            "error": "Gemini API error",
             "metadata": {
                 "input_pdfs": len(pdf_files),
                 "total_pages": page_count,

@@ -72,6 +72,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Shutdown Banner */}
+      <div className="bg-red-600 text-white text-center py-4 px-6">
+        <p className="font-semibold text-base">
+          Cramify has shut down and is no longer active. Thank you to everyone who used the service.
+        </p>
+      </div>
+
       {/* Login Modal - appears when showLoginModal is true */}
       <LoginModal
         isOpen={showLoginModal}
